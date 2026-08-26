@@ -1,211 +1,233 @@
 workspace "SimPaddock - Bounded Contexts" "Domain bounded context map for SimPaddock." {
 
     model {
-        discord = element "Discord" "Identity Provider" {
-            description "External provider used for authentication and identity evidence."
-            tags "External,Identity Provider"
+
+        discord = element "Discord" {
+            description "External identity provider used for authentication and identity evidence."
+            tags "External System,Identity Provider"
         }
 
-        steam = element "Steam" "Identity Provider" {
-            description "External provider used for authentication and identity evidence."
-            tags "External,Identity Provider"
+        steam = element "Steam" {
+            description "External identity provider used for authentication and identity evidence."
+            tags "External System,Identity Provider"
         }
 
-        simgrid = element "SimGrid" "Trusted Racing Data Source" {
-            description "Trusted external source of drivers, teams, competitions, entries and results."
-            tags "External,Trusted Racing Data Source"
+        simgrid = element "SimGrid" {
+            description "Trusted external source of sim-racing identities, teams, competitions, entries and results."
+            tags "External System,Trusted Racing Data Source"
         }
 
-        gridFinder = element "Grid Finder" "Trusted Racing Data Source" {
-            description "Trusted external source of drivers, teams, competitions and results where integration access permits."
-            tags "External,Trusted Racing Data Source"
+        gridFinder = element "Grid Finder" {
+            description "Trusted external source of sim-racing teams, competitions and results where integration access permits."
+            tags "External System,Trusted Racing Data Source"
         }
 
-        raceControl = element "RaceControl" "Trusted Racing Data Source" {
+        raceControl = element "RaceControl" {
             description "Trusted external source of LMU identities, events, ratings and race results."
-            tags "External,Trusted Racing Data Source"
+            tags "External System,Trusted Racing Data Source"
         }
 
 
-        accountsClaims = element "Accounts & Claims" "Bounded Context" {
-            description "Owns user accounts, authentication connections, claims and verification evidence. Determines who is authenticated and what source-backed entity they may manage."
-            tags "Bounded Context,Supporting"
-
-            properties {
-                "Owns" "UserAccount, AuthConnection, Claim, VerificationEvidence"
-                "Question" "Who may manage what?"
-            }
+        accountsClaims = element "Accounts & Claims" {
+            description "Owns user accounts, authentication connections, claims and verification evidence. Answers who may manage a source-backed entity."
+            tags "Bounded Context,Supporting Context"
         }
 
-        integrationsProvenance = element "Integrations & Provenance" "Bounded Context" {
-            description "Protects the canonical domain from external platform models. Imports trusted source data, retains provenance and resolves external identities and records to canonical SimPaddock entities."
-            tags "Bounded Context,Core"
-
-            properties {
-                "Owns" "TrustedSource, ExternalRecord, ExternalReference, CanonicalMapping, ImportBatch, IdentityResolution"
-                "Question" "What evidence establishes this fact?"
-            }
+        driverRegistry = element "Driver Registry" {
+            description "Owns canonical driver identities and public driver profile information."
+            tags "Bounded Context,Core Context"
         }
 
-        driverRegistry = element "Driver Registry" "Bounded Context" {
-            description "Owns canonical driver identity and the driver's public profile information."
-            tags "Bounded Context,Core"
-
-            properties {
-                "Owns" "Driver, DriverAlias, Profile, SocialLink, ExternalProfileLink"
-                "Question" "Who is this driver?"
-            }
+        teamManagement = element "Team Management" {
+            description "Owns canonical teams, explicit team memberships, team roles, invitations and team management."
+            tags "Bounded Context,Core Context"
         }
 
-        teamManagement = element "Team Management" "Bounded Context" {
-            description "Owns teams, explicit team membership, team roles, invitations and team management. Historical team structure such as Main, Academy and Community teams is future scope."
-            tags "Bounded Context,Core"
-
-            properties {
-                "Owns" "Team, TeamMembership, TeamRole, TeamInvitation"
-                "Question" "What is this team and who belongs to it?"
-            }
+        organisationsCompetitions = element "Organisations & Competitions" {
+            description "Owns organisations, organisation memberships and permissions, competitions, optional rounds and races."
+            tags "Bounded Context,Core Context"
         }
 
-        organisationsCompetitions = element "Organisations & Competitions" "Bounded Context" {
-            description "Owns organisations, organisation staff and permissions, competitions and source-backed competition structure. It records competition structure rather than operating the full competition lifecycle."
-            tags "Bounded Context,Core"
-
-            properties {
-                "Owns" "Organisation, OrganisationMembership, OrganisationRole, Permission, Competition, Round, Race"
-                "Optional" "Session - only when meaningfully established by a trusted source"
-                "Question" "What organisations, competitions and races exist?"
-            }
+        resultsRecords = element "Results & Records" {
+            description "Owns source-backed race results, standings, historical driver/team representation, corrections and revisions."
+            tags "Bounded Context,Core Context,Critical Core"
         }
 
-        resultsRecords = element "Results & Records" "Bounded Context" {
-            description "Owns the canonical historical record of what happened in competitions, including source-backed participant/team representation, standings, corrections and revisions."
-            tags "Bounded Context,Core,Critical"
-
-            properties {
-                "Owns" "RaceResult, ResultEntry, ChampionshipStanding, StandingEntry, ResultCorrection, ResultRevision"
-                "Question" "What actually happened?"
-            }
+        integrationsProvenance = element "Integrations & Provenance" {
+            description "Owns trusted-source ingestion, external references, canonical mappings, identity resolution and provenance."
+            tags "Bounded Context,Core Context,Critical Core"
         }
 
-        motorsportCatalog = element "Motorsport Catalog" "Bounded Context" {
-            description "Owns supporting motorsport reference data used by competitions and historical records."
-            tags "Bounded Context,Supporting"
-
-            properties {
-                "Owns" "Game, Car, CarClass, Circuit, CircuitLayout"
-                "Question" "What motorsport object does this record refer to?"
-            }
+        motorsportCatalog = element "Motorsport Catalog" {
+            description "Owns supporting reference data such as games, cars, car classes, circuits and layouts."
+            tags "Bounded Context,Supporting Context"
         }
 
-        publicHistory = element "Public History Read Models" "Projection / Read Model" {
-            description "Derived public views assembled from canonical domain data. This is not an independent source of historical truth."
-            tags "Projection"
-
-            properties {
-                "Provides" "Driver careers, team history, achievements, trophy cabinets, statistics, public profiles"
-            }
+        publicHistory = element "Public History Read Models" {
+            description "Derived projections used for public careers, achievements, trophy cabinets, statistics and historical views."
+            tags "Read Model"
         }
 
 
         discord -> accountsClaims "Provides authentication and identity evidence"
         steam -> accountsClaims "Provides authentication and identity evidence"
 
-        simgrid -> integrationsProvenance "Provides trusted racing data"
-        gridFinder -> integrationsProvenance "Provides trusted racing data"
-        raceControl -> integrationsProvenance "Provides trusted LMU identity and racing data"
+        simgrid -> integrationsProvenance "Provides trusted racing data" {
+            tags "Evidence Flow"
+        }
 
-        accountsClaims -> driverRegistry "Grants verified management authority over claimed Driver Profiles"
-        accountsClaims -> teamManagement "Grants verified management authority over claimed Teams"
-        accountsClaims -> organisationsCompetitions "Grants verified management authority over claimed Organisations"
+        gridFinder -> integrationsProvenance "Provides trusted racing data" {
+            tags "Evidence Flow"
+        }
 
-        integrationsProvenance -> driverRegistry "Maps source identities to canonical Drivers"
-        integrationsProvenance -> teamManagement "Maps source teams and explicit membership evidence"
-        integrationsProvenance -> organisationsCompetitions "Maps source organisations and competition structure"
-        integrationsProvenance -> resultsRecords "Supplies normalized source-backed historical evidence"
-        integrationsProvenance -> motorsportCatalog "Maps external games, cars, classes and circuits"
+        raceControl -> integrationsProvenance "Provides trusted LMU identity and racing data" {
+            tags "Evidence Flow"
+        }
 
-        teamManagement -> driverRegistry "References canonical Drivers as team members"
 
-        resultsRecords -> driverRegistry "References canonical Drivers that participated"
-        resultsRecords -> teamManagement "References canonical Teams represented in historical results"
-        resultsRecords -> organisationsCompetitions "Records results and standings for races and competitions"
-        resultsRecords -> motorsportCatalog "References source-backed cars, classes and circuits"
+        accountsClaims -> driverRegistry "Grants management authority over successfully claimed Driver Profiles"
 
-        driverRegistry -> publicHistory "Provides canonical driver identity and profile data"
-        teamManagement -> publicHistory "Provides team and membership data"
-        organisationsCompetitions -> publicHistory "Provides organisation and competition structure"
-        resultsRecords -> publicHistory "Provides authoritative historical records"
-        motorsportCatalog -> publicHistory "Provides motorsport reference data"
+        accountsClaims -> teamManagement "Grants management authority over claimed Teams"
+
+        accountsClaims -> organisationsCompetitions "Grants management authority over claimed Organisations"
+
+
+        integrationsProvenance -> driverRegistry "Resolves external identities to canonical Drivers" {
+            tags "Evidence Flow"
+        }
+
+        integrationsProvenance -> teamManagement "Resolves external teams to canonical Teams" {
+            tags "Evidence Flow"
+        }
+
+        integrationsProvenance -> organisationsCompetitions "Imports source-backed organisations, competitions, rounds and races" {
+            tags "Evidence Flow"
+        }
+
+        integrationsProvenance -> resultsRecords "Imports source-backed results and standings" {
+            tags "Evidence Flow"
+        }
+
+        integrationsProvenance -> motorsportCatalog "Resolves source-specific games, cars, classes and circuits" {
+            tags "Evidence Flow"
+        }
+
+
+        teamManagement -> driverRegistry "Team memberships reference canonical Drivers"
+
+        resultsRecords -> driverRegistry "Results reference canonical Drivers"
+
+        resultsRecords -> teamManagement "Results reference canonical Teams"
+
+        resultsRecords -> organisationsCompetitions "Records results for source-backed competitions and races"
+
+        organisationsCompetitions -> motorsportCatalog "References games and circuits when established by the source"
+
+        resultsRecords -> motorsportCatalog "References cars and classes when established by the source"
+
+
+        driverRegistry -> publicHistory "Feeds public driver projections" {
+            tags "Projection"
+        }
+
+        teamManagement -> publicHistory "Feeds team and membership projections" {
+            tags "Projection"
+        }
+
+        organisationsCompetitions -> publicHistory "Feeds competition history projections" {
+            tags "Projection"
+        }
+
+        resultsRecords -> publicHistory "Feeds achievements, trophies and statistics" {
+            tags "Projection"
+        }
     }
 
 
     views {
-        custom "BoundedContexts" "SimPaddock - Bounded Context Map" {
-            include *
-            autoLayout tb 250 180
 
-            description "Domain boundaries and dependencies within SimPaddock. Bounded contexts represent logical domain/module boundaries, not independently deployable services."
+        custom "BoundedContexts" {
+            title "SimPaddock - Bounded Context Map"
+            description "Domain boundaries and dependencies inside SimPaddock, together with identity providers and trusted racing data sources."
+
+            include *
+
+            autoLayout tb
         }
 
+
         styles {
+
             element "Element" {
                 shape RoundedBox
                 background #dddddd
                 color #222222
                 stroke #888888
+                description true
             }
 
             element "Bounded Context" {
-                background #1168bd
-                color #ffffff
-                stroke #0b4884
-            }
-
-            element "Core" {
-                background #1168bd
-                color #ffffff
-                stroke #0b4884
-            }
-
-            element "Critical" {
-                background #08427b
-                color #ffffff
-                stroke #052b51
-            }
-
-            element "Supporting" {
                 background #438dd5
                 color #ffffff
-                stroke #2f6599
+                stroke #2e6295
             }
 
-            element "Projection" {
+            element "Core Context" {
+                background #1168bd
+                color #ffffff
+                stroke #0b4884
+            }
+
+            element "Critical Core" {
+                background #08427b
+                color #ffffff
+                stroke #052f59
+                strokeWidth 3
+            }
+
+            element "Supporting Context" {
+                background #438dd5
+                color #ffffff
+            }
+
+            element "Read Model" {
                 background #999999
                 color #ffffff
                 stroke #666666
+                border dashed
             }
 
-            element "External" {
+            element "External System" {
                 background #666666
                 color #ffffff
                 stroke #444444
             }
 
-            element "Trusted Racing Data Source" {
-                background #438dd5
+            element "Identity Provider" {
+                background #555555
                 color #ffffff
             }
 
-            element "Identity Provider" {
-                background #666666
+            element "Trusted Racing Data Source" {
+                background #2f95c5
                 color #ffffff
             }
+
 
             relationship "Relationship" {
                 color #707070
                 thickness 2
-                routing Orthogonal
+                routing Curved
+            }
+
+            relationship "Evidence Flow" {
+                color #1168bd
+                thickness 3
+            }
+
+            relationship "Projection" {
+                color #777777
+                style dashed
             }
         }
     }
