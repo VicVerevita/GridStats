@@ -18,7 +18,7 @@ workspace "SimPaddock" "Sim Motorsport history platform" {
         }
 
         simpaddock = softwareSystem "SimPaddock" {
-            description "Drivers, Teams & Competition — Sim Motorsport History Platform."
+            description "Drivers, Teams & Competition - Sim Motorsport History Platform."
         }
 
         discord = softwareSystem "Discord" {
@@ -65,7 +65,7 @@ workspace "SimPaddock" "Sim Motorsport history platform" {
             include *
             autoLayout tb
 
-            title "SimPaddock — System Context"
+            title "SimPaddock - System Context"
             description "Public-first sim motorsport history platform and its users, identity providers and trusted racing data sources."
         }
 
